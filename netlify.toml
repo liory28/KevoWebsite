@@ -1,0 +1,11 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Lets the client's existing hardcoded fetch("/api/chat") work unchanged —
+# Netlify Functions actually live at /.netlify/functions/<name>.
+[[redirects]]
+  from = "/api/chat"
+  to = "/.netlify/functions/chat"
+  status = 200
+  force = true
