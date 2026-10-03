@@ -1677,7 +1677,7 @@
     // so it stays correct through "Change the numbers." Agent mode only: this is the agent's own
     // compensation, never shown on the buyer-facing side of the sidebar.
     var feeHtml = (state.mode === 'agent' && d.loanAmount) ?
-      '<div class="snap-fee"><span class="sf-tag">Your referral fee</span><div class="sf-row"><span>'+AGENT_FEE_BPS+' bps, business-purpose</span><b class="sf-amt mono">'+fmt$(agentFeeAmount(d.loanAmount))+'</b></div><div class="sf-note">Paid at funding — subject to your brokerage’s commission split.</div></div>' : '';
+      '<div class="snap-fee"><span class="sf-tag">Your referral fee</span><div class="sf-row"><span>'+AGENT_FEE_BPS+' bps, business-purpose</span><b class="sf-amt mono">'+fmt$(agentFeeAmount(d.loanAmount))+'</b></div><div class="sf-note">Paid at funding through your brokerage, subject to your commission split.</div></div>' : '';
     body.innerHTML = addrHtml +
       feeHtml +
       (rowsHtml ? '<div style="margin-top:10px;">'+rowsHtml+'</div>' : '') +
@@ -1919,7 +1919,7 @@
         '<div class="agent-fee-card">'+
           '<span class="afc-tag">Business-purpose loan · you’re eligible</span>'+
           '<div class="afc-row"><span>Your referral fee <span class="mono" style="font-size:11.5px;">('+AGENT_FEE_BPS+' bps)</span></span><b class="afc-amt mono">'+fmt$(agentFeeAmount(loanAmount))+'</b></div>'+
-          '<div class="afc-note">Paid directly to you at funding — subject to your brokerage’s commission split.</div>'+
+          '<div class="afc-note">Paid at funding through your brokerage, subject to your commission split.</div>'+
         '</div>'
     };
   }
