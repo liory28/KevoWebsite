@@ -1,0 +1,17 @@
+{
+  "name": "Kevo Instant Approval",
+  "short_name": "Kevo",
+  "description": "Sketch an investor buyer's deal and send them a pre-filled approval link.",
+  "id": "./?app=kevo",
+  "start_url": "./?mode=agent&source=homescreen",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1F2A23",
+  "theme_color": "#1F2A23",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

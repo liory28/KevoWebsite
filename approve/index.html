@@ -1,6 +1,12 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F2A23">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Kevo">
+<script>if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
 <title>Kevo Instant Approval</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
@@ -367,6 +373,8 @@
 
   /* numbers editor ("Something's different") */
   .num-editor{display:grid;gap:8px;}
+  .num-editor.my-agent .ne-row input{width:min(220px,55vw);}
+  .lc-actions a.lc-link{display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;border:1px solid var(--stone-line-strong);color:var(--ink);text-decoration:none;font-weight:600;font-size:13px;}
   .num-editor .ne-row{display:flex;align-items:center;gap:10px;font-size:13.5px;}
   .num-editor .ne-row label{flex:1;color:var(--ink-soft);}
   .num-editor .ne-row input{width:140px;background:var(--surface);border:1px solid var(--stone-line-strong);border-radius:9px;padding:8px 10px;font-family:"JetBrains Mono",monospace;text-align:right;}
@@ -632,7 +640,7 @@
     <div class="mb-actions">
       <button type="button" id="mobileAskBtn" style="display:none;">Ask a question</button>
       <button type="button" id="mobileSnapBtn">Details</button>
-      <button type="button" id="mobileModeBtn">Agent view</button>
+      <button type="button" id="mobileModeBtn">I'm an agent</button>
     </div>
   </div>
 
@@ -2082,9 +2090,9 @@
     var title = document.getElementById('chatTitle');
     var sub = document.getElementById('chatSub');
     if(title) title.textContent = mode==='agent' ? 'Agent offer desk' : 'Your financing conversation';
-    if(sub) sub.textContent = mode==='agent' ? "Sketch a scenario, then invite your buyer" : (state.data.agentName ? 'Introduced by '+state.data.agentName : 'Private & confidential');
+    if(sub) sub.textContent = mode==='agent' ? "Sketch a scenario, then invite your buyer" : (state.invited && state.data.agentName ? 'Introduced by '+state.data.agentName : 'Private & confidential');
     var mobileBtn = document.getElementById('mobileModeBtn');
-    if(mobileBtn) mobileBtn.textContent = mode==='agent' ? 'Buyer view' : 'Agent view';
+    if(mobileBtn) mobileBtn.textContent = mode==='agent' ? 'Buyer view' : 'I\'m an agent';
     // v20: a buyer who arrived from their agent's link is a consumer, not someone choosing between
     // two tools — hide the Agent/Buyer switch for them (state.invited is set only by boot()).
     var frame = document.querySelector('.appframe');
@@ -3576,7 +3584,7 @@
       if(state.data.letterGenerated) chips.push({label:'Open my letter', value:'viewletter', primary:true});
       else chips.push({label:'Get my approval letter', value:'login', primary:true});
       if(state.data.letterGenerated && !state.data.letterSaved) chips.push({label:'Add my name to the letter', value:'login'});
-      if(state.data.letterGenerated && state.data.letterSaved && state.data.agentName) chips.push({label:'Send it to '+state.data.agentName, value:'sendagent'});
+      if(state.data.letterGenerated && state.data.letterSaved) chips.push({label: state.data.agentName ? 'Send it to '+state.data.agentName : 'Send to my agent', value:'sendagent'});
       if(!isFull && !state.data.loanStarted) chips.push({label:'Upgrade to full underwriting', value:'upgrade'});
       if(!state.data.loanStarted) chips.push({label:"I'm ready to start my loan", value:'startloan'});
     } else {
@@ -4097,7 +4105,7 @@
         '<div class="lc-title">'+(m.isFull ? 'Fully Underwritten Approval' : 'Pre-Approval')+' for '+safeHtml(m.addr)+'</div>'+
         '<div class="lc-sub">'+fmt$(m.r.loanAmount)+' · '+m.vcount+' of '+m.total+' checked · Ref '+m.ref+'</div>'+
         '<div class="lc-actions"><button type="button" class="pri" data-a="open">Open</button><button type="button" data-a="pdf">Download PDF</button>'+
-          (state.data.agentName && m.saved ? '<button type="button" data-a="share">Send to '+safeHtml(state.data.agentName.split(' ')[0])+'</button>' : '')+'</div></div>'+
+          (m.saved ? '<button type="button" data-a="share">'+(state.data.agentName ? 'Send to '+safeHtml(state.data.agentName.split(' ')[0]) : 'Send to my agent')+'</button>' : '')+'</div></div>'+
     '</div></div>';
     stream.appendChild(el); scrollDown();
     el.querySelector('.lc-thumb').onclick = openLetterViewer;
@@ -4133,8 +4141,8 @@
     });
     document.getElementById('lvTitle').textContent = (state.result.tier === 'full' ? 'Fully Underwritten Approval' : 'Pre-Approval')+' · Ref '+refNumber();
     var shareBtn = document.getElementById('lvShareBtn');
-    shareBtn.style.display = (state.data.agentName && state.data.letterSaved) ? '' : 'none';
-    shareBtn.textContent = 'Send to '+(state.data.agentName ? state.data.agentName.split(' ')[0] : 'agent');
+    shareBtn.style.display = state.data.letterSaved ? '' : 'none';
+    shareBtn.textContent = state.data.agentName ? 'Send to '+state.data.agentName.split(' ')[0] : 'Send to my agent';
     lv.classList.add('show');
     scroll.scrollTop = 0;
     layoutLetterViewer();
@@ -4224,7 +4232,48 @@
   // "Send it to Maya": on a phone, hand the PDF straight to the share sheet (text, email, WhatsApp).
   // Where sharing files isn't possible (desktop browsers, the claude.ai viewer), fall back to a
   // ready-to-paste message plus the PDF download — never claim it was sent when it wasn't.
+  // v24: any buyer can send their approval to their own agent, not only buyers who came from an
+  // agent's link. If no agent is on file yet, ask once (name + optional phone/email), put them on the
+  // letter as the buyer's agent, and mark them as added by the buyer: an agent the buyer brings in is
+  // not a referral (see fileSnapshot). The share itself then runs from a fresh tap, so the phone's
+  // share sheet still opens (browsers only allow it right after a tap).
+  function askForMyAgent(){
+    closeLetterViewer();
+    addBotBubble("Who's your agent? I'll add them to your letter as your buyer's agent, then you can send it to them.", function(){
+      composer.innerHTML = '<div class="num-editor my-agent">'+
+        '<div class="ne-row"><label for="myAgentName">Agent\'s name</label><input id="myAgentName" type="text" autocomplete="off" placeholder="Jordan Lee"></div>'+
+        '<div class="ne-row"><label for="myAgentContact">Phone or email <span style="color:var(--ink-faint)">(optional)</span></label><input id="myAgentContact" type="text" autocomplete="off" placeholder="(818) 555-0142"></div>'+
+        '<div class="ne-actions"><button type="button" class="sendbtn" id="myAgentSave" style="padding:10px 16px;">Add my agent</button><button type="button" class="chip" id="myAgentCancel">Cancel</button></div></div>';
+      var nameEl = document.getElementById('myAgentName');
+      nameEl.focus();
+      document.getElementById('myAgentCancel').onclick = function(){ composer.innerHTML = ''; renderPostDecisionChips(); };
+      document.getElementById('myAgentSave').onclick = function(){
+        var name = (nameEl.value || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+        var contact = (document.getElementById('myAgentContact').value || '').trim().slice(0, 80);
+        if(!name){ nameEl.focus(); nameEl.style.borderColor = 'var(--clay)'; return; }
+        state.data.agentName = name;
+        state.data.agentContact = contact;
+        state.data.agentSource = 'buyer';
+        composer.innerHTML = '';
+        addUserBubble('My agent is '+name+(contact ? ' ('+contact+')' : ''));
+        invalidateLetterPdf();
+        prepareLetterPdf();
+        saveCurrentChatToList();
+        addBotBubble("Done. Your letter now lists "+safeHtml(name)+" as your buyer's agent. Tap “Send it to "+safeHtml(name)+"” to share it.", renderPostDecisionChips);
+      };
+      nameEl.onkeydown = function(e){ if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('myAgentContact').focus(); } };
+      document.getElementById('myAgentContact').onkeydown = function(e){ if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('myAgentSave').click(); } };
+    });
+  }
+  function agentContactLinks(text){
+    var c = (state.data.agentContact || '').trim();
+    if(!c) return '';
+    if(c.indexOf('@') > 0) return '<a class="lc-link" href="mailto:'+encodeURIComponent(c)+'?subject='+encodeURIComponent('My Kevo approval letter')+'&body='+encodeURIComponent(text)+'">Email it</a>';
+    var digits = c.replace(/[^0-9+]/g, '');
+    return digits.length >= 7 ? '<a class="lc-link" href="sms:'+digits+'?body='+encodeURIComponent(text)+'">Text it</a>' : '';
+  }
   function shareLetterWithAgent(){
+    if(!state.data.agentName){ askForMyAgent(); return; }
     var text = agentMessageText();
     var name = state.data.agentName || 'your agent';
     if(letterPdfBlob && navigator.canShare && window.File){
@@ -4244,7 +4293,7 @@
       var el = document.createElement('div'); el.className = 'msg bot';
       el.innerHTML = '<div class="av">K</div><div class="card"><div class="ck">Message for '+safeHtml(name)+'</div>'+
         '<p style="font-size:13.5px;margin:0 0 10px;line-height:1.55;" class="agent-msg"></p>'+
-        '<div class="lc-actions" style="padding-top:0;"><button type="button" class="pri" data-a="copy">Copy message</button><button type="button" data-a="pdf">Download PDF</button></div></div>';
+        '<div class="lc-actions" style="padding-top:0;"><button type="button" class="pri" data-a="copy">Copy message</button><button type="button" data-a="pdf">Download PDF</button>'+agentContactLinks(text)+'</div></div>';
       el.querySelector('.agent-msg').textContent = text;
       stream.appendChild(el); scrollDown();
       el.querySelector('[data-a="copy"]').onclick = function(){
@@ -4285,7 +4334,7 @@
     var d = state.data, r = state.result;
     var lines = [];
     lines.push('Conversation mode: '+(state.mode==='agent' ? "Agent (sketching a scenario for a buyer, hasn't collected the buyer's own credit/funds)" : 'Buyer (borrower speaking directly)'));
-    if(d.agentName) lines.push('Introducing agent: '+d.agentName);
+    if(d.agentName) lines.push(d.agentSource === 'buyer' ? "Buyer's agent (added by the buyer, not a referral): "+d.agentName+(d.agentContact ? ' ('+d.agentContact+')' : '') : 'Introducing agent: '+d.agentName);
     var programNames = {dscr:'Rental Property (DSCR)', bankstatement:'Self-Employed — Bank Statements', pnl:'Self-Employed — P&L'};
     if(d.program) lines.push('Loan program: '+(programNames[d.program]||d.program));
     if(d.purpose) lines.push('Loan purpose: '+({purchase:'Purchase', ratetermrefi:'Rate/Term Refinance', cashoutrefi:'Cash-Out Refinance'}[d.purpose]||d.purpose));
@@ -4849,6 +4898,10 @@
         ptype: qp.get('ptype'),
         down: qp.get('down')
       });
+    } else if(qp.get('mode') === 'agent'){
+      state.mode = 'agent';
+      setModeUI('agent');
+      agentStart();
     } else {
       setModeUI('buyer');
       start();
