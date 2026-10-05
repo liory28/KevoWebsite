@@ -1,11 +1,93 @@
+# Kevo — one site, one app. Lives on the "kevowebsite" Netlify project (kevomortgage.com).
+#   /          borrower homepage (investor video, chat demo) -> app opens on the borrower side (?mode=buyer)
+#   (/invest was merged into the homepage on 2026-10-05 and now redirects to /)
+#   /agents/   agent site              -> app opens on the agent side   (?mode=agent)
+#   /approve/  Kevo Instant Approval (the only copy of the app; home-screen install lives here)
+# terms.kevomtg.com stays on its own project and is not touched by this file.
+
 [build]
   publish = "."
   functions = "netlify/functions"
 
-# Lets the client's existing hardcoded fetch("/api/chat") work unchanged —
-# Netlify Functions actually live at /.netlify/functions/<name>.
+# --- AI backend for the app ---
 [[redirects]]
   from = "/api/chat"
   to = "/.netlify/functions/chat"
   status = 200
   force = true
+
+# --- kevomtg.com is now just a short alias: send every old link to the same path on kevomortgage.com ---
+# (old invite links like kevomtg.com/?mode=buyer&agent=... keep their query string and land in the app)
+[[redirects]]
+  from = "https://kevomtg.com/kevo-instant-approval.html"
+  to = "https://kevomortgage.com/approve/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.kevomtg.com/kevo-instant-approval.html"
+  to = "https://kevomortgage.com/approve/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://kevomtg.com/*"
+  to = "https://kevomortgage.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.kevomtg.com/*"
+  to = "https://kevomortgage.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.kevomortgage.com/*"
+  to = "https://kevomortgage.com/:splat"
+  status = 301
+  force = true
+
+# --- legacy file name of the app ---
+[[redirects]]
+  from = "/kevo-instant-approval.html"
+  to = "/approve/"
+  status = 301
+
+# --- short, easy-to-say links ---
+[[redirects]]
+  from = "/app"
+  to = "/approve/?mode=agent"
+  status = 302
+
+[[redirects]]
+  from = "/start"
+  to = "/approve/?mode=buyer"
+  status = 302
+
+[[redirects]]
+  from = "/agent"
+  to = "/agents/"
+  status = 301
+
+[[redirects]]
+  from = "/invest"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/invest/*"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/investors"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/terms"
+  to = "https://terms.kevomtg.com"
+  status = 302
